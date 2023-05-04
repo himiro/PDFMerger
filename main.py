@@ -13,6 +13,12 @@ def merge_images(folder_path, images, pdf_name):
     for path in images:
         im = Image.open(path)
         im = im.convert('RGB')
+        h, w = im.size
+        print(h, w)
+        if h > w:
+            print('portrait')
+        else:
+            print('landscape')
         converted_images.append(im)
 
     if len(converted_images) > 0:
@@ -45,9 +51,8 @@ def order_images(images):
 
 
 def get_images(path, pdf_name):
-    print('Wait a second while I\'m getting the images in the folder ', path)
     files = os.listdir(path)
-    images = [path + '/' + f for f in files if f.split('.')[-1] in ALLOWED_EXTENSIONS]
+    images = [path + f for f in files if f.split('.')[-1] in ALLOWED_EXTENSIONS]
     print('The following files will be merged in this order : ', images)
     print('Are you sure you want to ? [y]/n')
     for line in sys.stdin:
@@ -65,6 +70,17 @@ def get_images(path, pdf_name):
 
 
 def select_directory(directory, pdf_name):
+    if os.path.isfile(directory+pdf_name):
+        print("The file {0} already exists. Do you want to continue ? [y]/n".format(pdf_name))
+        for line in sys.stdin:
+            line = line.strip()
+            if len(line) == 0 or line.lower() == 'y' or line.lower() == 'yes':
+                break
+            elif line.lower() == 'n' or line.lower() == 'no' or line.lower() == 'exit':
+                print("You can specify the name of the merged pdf file launching with the --pdf-name argument.")
+                return True
+            else:
+                continue
     directory = directory.strip()
     if os.path.isdir(directory):
         get_images(directory, pdf_name)
@@ -74,12 +90,10 @@ def select_directory(directory, pdf_name):
 
 
 def print_help():
-    print("USAGE : ./main.py -f FOLDER_PATH")
-    print("-h | --help : print this help")
-    print("-d | --directory : Specify the folder path where the images are. Default current directory")
-    # print("--pdf-folder : Specify the folder path in which the merged pdf will be saved. Default in the same "
-    #      "directory as the images")
-    print("--pdf-name : Specify the name of the merged pdf file. Default name 'merged_pdf.pdf'")
+    print("USAGE : python main.py -f FOLDER_PATH")
+    print("\t-h, --help\t\t print this help")
+    print("\t-d, --directory\t\t Specify the folder path where the images are. Default current directory")
+    print("\t--pdf-name\t\t Specify the name of the merged pdf file. Default name 'merged_pdf.pdf'")
 
 
 def parse_arguments():
@@ -96,7 +110,7 @@ def parse_arguments():
                 print("Directory not specified. Default current directory")
             else:
                 i += 1
-                directory = args[i]
+                directory = pdf_name = args[i] if args[i][:-1] == '/' else args[i] + '/'
                 print('DIRECTORY SET : ', directory)
         elif args[i] == '--pdf-name':
             if i == len(args) - 1 or not args[i + 1]:
@@ -114,9 +128,7 @@ def parse_arguments():
 
 """
 TODO : 
-    - Check if the ordering is OK. Else change it by hand
-    - Check if pdf_file already exist and ask to replace if needed
-    - Turn images when portrait
+    - Turn images when portrait with CNN
     - Can autocomplete path in stdin ?
     - Write README
     - Create an executable
